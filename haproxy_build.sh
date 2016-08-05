@@ -348,6 +348,11 @@ if [ $ERR -ne 0 ]; then
 fi
 echo "HA-Proxy ${HAPROXY_VERSION} building completed."
 
+mkdir "haproxy-${HAPROXY_VERSION}"
+
+cp "${TMP_DIR}/haproxy-${HAPROXY_VERSION}/haproxy" "haproxy-${HAPROXY_VERSION}/"
+cp -r "${TMP_DIR}/haproxy-${HAPROXY_VERSION}/examples/errorfiles" "haproxy-${HAPROXY_VERSION}/"
+
 echo ""
 echo "HA-Proxy building completed."
 echo "  HA-Proxy: ${HAPROXY_VERSION}"
