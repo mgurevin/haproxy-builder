@@ -274,6 +274,56 @@ function build_haproxy()
         return $ERR
     fi
 
+    patch --silent -p0 << EndOfPatch
+--- src/ssl_sock.c      2017-01-13 09:03:00 UTC
++++ src/ssl_sock.c
+@@ -793,7 +793,7 @@ static int ssl_sock_load_ocsp(SSL_CTX *c
+ 
+ #ifndef SSL_CTX_get_tlsext_status_cb
+ # define SSL_CTX_get_tlsext_status_cb(ctx, cb) \
+-       *cb = (void (*) (void))ctx->tlsext_status_cb;
++       *cb = SSL_CTX_ctrl(ctx,128,0, (void (**)(void))cb)
+ #endif
+        SSL_CTX_get_tlsext_status_cb(ctx, &callback);
+ 
+@@ -821,11 +821,7 @@ static int ssl_sock_load_ocsp(SSL_CTX *c
+                int key_type;
+                EVP_PKEY *pkey;
+ 
+-#ifdef SSL_CTX_get_tlsext_status_arg
+-               SSL_CTX_ctrl(ctx, SSL_CTRL_GET_TLSEXT_STATUS_REQ_CB_ARG, 0, &cb_arg);
+-#else
+-               cb_arg = ctx->tlsext_status_arg;
+-#endif
++               SSL_CTX_ctrl(ctx, 129, 0, &cb_arg);
+ 
+                /*
+                 * The following few lines will convert cb_arg from a single ocsp to multi ocsp
+@@ -3537,7 +3533,7 @@ int ssl_sock_handshake(struct connection
+                                        OSSL_HANDSHAKE_STATE state = SSL_get_state((SSL *)conn->xprt_ctx);
+                                        empty_handshake = state == TLS_ST_BEFORE;
+ #else
+-                                       empty_handshake = !((SSL *)conn->xprt_ctx)->packet_length;
++                                       empty_handshake = SSL_state((SSL *)conn->xprt_ctx) == SSL_ST_BEFORE;
+ #endif
+ 
+                                        if (empty_handshake) {
+@@ -3615,7 +3611,7 @@ int ssl_sock_handshake(struct connection
+                        state = SSL_get_state((SSL *)conn->xprt_ctx);
+                        empty_handshake = state == TLS_ST_BEFORE;
+ #else
+-                       empty_handshake = !((SSL *)conn->xprt_ctx)->packet_length;
++                       empty_handshake = SSL_state((SSL *)conn->xprt_ctx) == SSL_ST_BEFORE;
+ #endif
+                        if (empty_handshake) {
+                                if (!errno) {
+EndOfPatch ;ERR=$?
+    if [ $ERR -ne 0 ]; then
+        >&2 echo "Unable to patch haproxy: ${SRC}"
+        return $ERR
+    fi
+
+
     make -j$(nproc) \
         TARGET=linux2628 \
         CPU=native \
