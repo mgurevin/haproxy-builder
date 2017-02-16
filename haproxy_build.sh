@@ -274,9 +274,9 @@ function build_haproxy()
         return $ERR
     fi
 
-    patch --silent -p0 << EndOfPatch
---- src\/ssl_sock.c	2017-01-13 09:03:00 UTC
-+++ src\/ssl_sock.c
+    patch --silent -p0 << EOP
+--- src/ssl_sock.c	2017-01-13 09:03:00 UTC
++++ src/ssl_sock.c
 @@ -793,7 +793,7 @@ static int ssl_sock_load_ocsp(SSL_CTX *c
  
  #ifndef SSL_CTX_get_tlsext_status_cb
@@ -297,7 +297,7 @@ function build_haproxy()
 -#endif
 +		SSL_CTX_ctrl(ctx, 129, 0, &cb_arg);
  
- 		\/*
+ 		/*
  		 * The following few lines will convert cb_arg from a single ocsp to multi ocsp
 @@ -3537,7 +3533,7 @@ int ssl_sock_handshake(struct connection
  					OSSL_HANDSHAKE_STATE state = SSL_get_state((SSL *)conn->xprt_ctx);
